@@ -1,0 +1,54 @@
+version: "3"
+services:
+ shim:
+  image: sn_ircd_shim:build
+  restart: always
+  networks:
+   - traefik
+  labels:
+   - "traefik.enable=true"
+   - "traefik.docker.network=traefik_network"
+   - "traefik.tcp.routers.ircd.tls=true"
+   - "traefik.tcp.routers.ircd.tls.passthrough=false"
+   - "traefik.tcp.routers.ircd.tls.certresolver=myresolver"
+   - "traefik.tcp.routers.ircd.tls.domains[0].main=irc.${BASE_URL}"
+   - "traefik.tcp.routers.ircd.rule=HostSNI(`irc.${BASE_URL}`)"
+   - "traefik.tcp.routers.ircd.entrypoints=ircd"
+   - "traefik.tcp.routers.ircd.service=ircd-service"
+   - "traefik.tcp.services.ircd-service.loadbalancer.server.port=12345"
+   - "traefik.tcp.services.ircd-service.loadbalancer.proxyprotocol.version=1"
+ solanum:
+  image: sn_ircd
+  restart: always
+  networks:
+   - traefik
+  links:
+   - atheme
+  ports:
+   - 6697:6697
+#   - 9797:9797
+  volumes:
+   - /opt/ircd/conf:/usr/local/etc/
+   - /opt/ircd/logs:/usr/local/logs/
+   - /opt/letsencrypt/certs/certs/solanum.crt:/cert/fullchain.pem
+   - /opt/letsencrypt/certs/private/solanum.key:/cert/privkey.pem
+ atheme:
+  environment:
+    ATHEME_UID: 50000
+  labels:
+   - "traefik.enable=true"
+   - "traefik.docker.network=traefik_network"
+   - "traefik.http.routers.xmlrpc.entrypoints=xmlrpc"
+   - "traefik.http.routers.xmlrpc.service=www-xmlrpc-service"
+   - "traefik.http.routers.xmlrpc.rule=Host(`*`) || PathPrefix(`/xmlrpc`)"
+   - "traefik.http.services.www-xmlrpc-service.loadbalancer.server.port=8080"
+  image: sn_atheme
+  restart: always
+  networks:
+   - traefik
+  volumes:
+   - /opt/atheme/conf/:/atheme/etc/
+   - /opt/atheme/msmtprc:/etc/msmtprc
+networks:
+ traefik:
+  name: traefik_network

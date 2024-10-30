@@ -1,0 +1,10 @@
+[mysqld]
+innodb_buffer_pool_size = 8G
+character_set_server=utf8mb4
+collation_server=utf8mb4_unicode_ci
+key_buffer_size=64M
+sort_buffer_size=4M
+read_buffer_size=1M
+slow_query_log = 1
+slow_query_log_file = /var/log/mysql/slow.log
+long_query_time = 1

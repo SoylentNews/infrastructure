@@ -1,0 +1,61 @@
+version: '3'
+
+services:
+ reverse-proxy:
+  image: traefik:v2.10
+  restart: always
+  command:
+   - "--api.insecure=true"
+   - "--providers.docker=true"
+   - "--providers.docker.exposedbydefault=false"
+   - "--providers.file.directory=/config"
+   - "--providers.file.watch=true"
+   - "--entrypoints.websecure.address=:443"
+   - "--entrypoints.ircd.address=:7000"
+#   - "--entrypoints.ircd2.address=:6697"
+   - "--entrypoints.web.address=:80"
+   - "--entrypoints.monweb.address=:8000"
+   - "--entrypoints.xmlrpc.address=:8081"
+   - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+   - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+   - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+   - "--certificatesresolvers.myresolver.acme.email=justin.ennen@ennwise.com"
+   - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+  ports:
+   - "443:443"
+ #  - "6697:6697"
+   - "8080:8080"
+   - "8081:8081"
+   - "7000:7000"
+   - "8000:8000"
+   - "80:80"
+  networks:
+   - traefik
+  volumes:
+   - "/var/run/docker.sock:/var/run/docker.sock"
+   - "/opt/letsencrypt:/letsencrypt"
+   - "/opt/traefik/:/config"
+ dump-certs:
+   restart: always
+   image: ldez/traefik-certs-dumper:v2.8.1
+   container_name: traefik-certs-dumper
+   environment:
+    BASE_URL: testing.soylentnews.org
+   entrypoint: sh -c '
+      apk add jq
+      ; while ! [ -e /data/acme.json ]
+      || ! [ `jq ".[] | .Certificates | length" /data/acme.json` != 0 ]; do
+      sleep 1
+      ; done
+      && traefik-certs-dumper file --version v2 --watch
+        --source /data/acme.json --dest /data/certs
+        --post-hook "sh /hook.sh"'
+   labels:
+    traefik.enable: false
+   volumes:
+    - "/opt/letsencrypt:/data"
+    - ./hook.sh:/hook.sh
+networks:
+ traefik:
+  name: traefik_network
+  enable_ipv6: true

@@ -12,3 +12,4 @@
 .config/
 .local/
 .selected_editor
+.gitconfig

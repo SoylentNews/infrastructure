@@ -1,0 +1,9 @@
+FROM mariadb:latest
+RUN old_uid=$(id -u mysql) && \
+    old_gid=$(id -g mysql) && \
+    usermod -u 50000 mysql && \
+    groupmod -g 50000 mysql && \
+    find / -path /proc -prune -o -user $old_uid -exec chown -h 50000 {} \; && \
+    find / -path /proc -prune -o -group $old_gid -exec chgrp -h 50000 {} \;
+COPY mysql-custom.cnf /etc/mysql/conf.d/mysql-custom.cnf
+RUN chown mysql:mysql /etc/mysql/conf.d/mysql-custom.cnf && chmod 644 /etc/mysql/conf.d/mysql-custom.cnf

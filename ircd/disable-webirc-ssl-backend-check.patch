@@ -1,0 +1,26 @@
+diff --git "a/extensions/m_webirc.c" "b/extensions/m_webirc.c"
+index f999996c..65d544f1 100644
+--- "a/extensions/m_webirc.c"
++++ "b/extensions/m_webirc.c"
+@@ -148,16 +148,18 @@ mr_webirc(struct MsgBuf *msgbuf_p, struct Client *client_p, struct Client *sourc
+ 		const char *s;
+ 		for (s = parv[5]; s != NULL; (s = strchr(s, ' ')) && s++)
+ 		{
+-			if (!ircncmp(s, "secure", 6) && (s[6] == '=' || s[6] == ' ' || s[6] == '\0'))
++			if (!ircncmp(s, "secure", 6) && (s[6] == '=' || s[6] == ' ' || s[6] == '\0')) {
++				SetSecure(source_p);
+ 				secure = 1;
++			}
+ 		}
+ 	}
+-
++	/*
+ 	if (secure && !IsSecure(source_p))
+ 	{
+ 		sendto_one(source_p, "NOTICE * :CGI:IRC is not connected securely; marking you as insecure");
+ 		secure = 0;
+-	}
++	}*/
+ 
+ 	if (!secure)
+ 	{

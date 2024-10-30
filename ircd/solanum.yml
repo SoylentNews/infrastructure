@@ -1,0 +1,50 @@
+FROM alpine:3.19 AS builder
+# 3.19 has the version of mbedtls we need, 3.20 has 3.6.0+ which causes compile issues
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.19/main" >> /etc/apk/repositories && \
+    echo "http://dl-cdn.alpinelinux.org/alpine/v3.19/community" >> /etc/apk/repositories
+COPY ./disable-webirc-ssl-backend-check.patch /
+RUN set -xe; \
+	apk add --no-cache --virtual .build-deps \
+		git \
+		alpine-sdk \
+		flex \
+		bison \
+		sqlite-dev \
+		mbedtls-dev=2.28.9-r0 \
+		zlib-dev \
+		automake \
+		autoconf \
+		libtool \
+	\
+	&& git clone https://github.com/solanum-ircd/solanum.git \
+	&& cd /solanum \
+        && git checkout f5e8ad6 \
+        && git apply /disable-webirc-ssl-backend-check.patch \
+        && ./autogen.sh \
+	&& ./configure --prefix=/usr/local/ --enable-mbedtls \
+	&& make \
+        && make install \
+	&& mv /usr/local/etc/ircd.conf.example /usr/local/etc/ircd.conf \
+	&& apk del .build-deps \
+	&& rm -rf /var/cache/apk/*
+
+FROM alpine:3.19
+
+RUN addgroup -g 50000 ircd && \
+    adduser -u 50000 -G ircd -h /home/ircd -s /bin/sh -D ircd 
+
+RUN apk add --no-cache sqlite-dev mbedtls libtool
+COPY --from=builder --chown=ircd /usr/local /usr/local
+
+USER ircd
+
+EXPOSE 5000
+EXPOSE 6665-6669
+EXPOSE 6697
+EXPOSE 9999
+
+CMD ["/usr/local/bin/solanum", "-foreground"]
+
+# conf - /usr/local/etc
+# certs- /certs
+# logs - /usr/local/logs

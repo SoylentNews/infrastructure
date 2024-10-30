@@ -1,0 +1,73 @@
+- hosts: all
+  become: true
+  remote_user: devops
+  vars:
+   container_count: 4
+   default_container_name: docker
+   default_container_image: ubuntu
+   default_container_command: sleep 1
+
+  tasks:
+   - name: Install system packages
+     apt:
+      package:
+       - apt-transport-https
+       - ca-certificates
+       - curl
+       - software-properties-common
+       - python3-pip
+       - python3-docker
+       - python3-compose
+       - virtualenv
+       - python3-setuptools
+      state: latest
+      update_cache: true
+
+   - name: Add Docker GPG apt Key
+     apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+
+   - name: Add Docker Repository
+     apt_repository:
+      repo: deb https://download.docker.com/linux/ubuntu focal stable
+      state: present
+
+   - name: Update apt and install docker-ce
+     apt:
+      name: docker-ce
+      state: latest
+      update_cache: true
+
+   - name: Pull default Docker image
+     community.docker.docker_image:
+      name: "{{ default_container_image }}"
+      source: pull
+
+   - name: Create "docker" group
+     group:
+      name: "docker"
+      state: present
+
+   - name: Add remote "devops" user to "docker" group
+     user:
+      name: devops
+      groups: docker
+      append: yes
+
+   - name: Disable DNSStubListener from Binding
+     become: true
+     shell: |
+        sed -i 's/#DNSStubListener=yes/DNSStubListener=no/g' /etc/systemd/resolved.conf
+        rm /etc/resolv.conf
+        ln -s /run/systemd/resolve/resolv.conf /etc/
+        systemctl restart systemd-resolved.service
+   - name: Create default containers
+     community.docker.docker_container:
+      name: "{{ default_container_name }}{{ item }}"
+      image: "{{ default_container_image }}"
+      command: "{{ default_container_command }}"
+      state: present
+     with_sequence: count={{ container_count }}
+
+
