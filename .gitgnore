@@ -1,0 +1,14 @@
+/wip-infra
+/ansible-data
+.ansible/
+.bash_logout
+.cache/
+.docker/
+.lesshst
+.profile
+.ssh/
+.bash_history
+.bashrc
+.config/
+.local/
+.selected_editor
