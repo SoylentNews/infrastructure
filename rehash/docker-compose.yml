@@ -13,6 +13,8 @@ services:
     MYHOSTNAME: soylentnews.org
     RELAYHOST: postfix
   restart: always
+  depends_on:
+   - database
   env_file:
    - /secrets/production.env
   links:
@@ -41,6 +43,26 @@ services:
 #  ENCRYPT_PASSWORD
   volumes:
    - /opt/rehash/backup:/backup
+ db-view:
+  image: phpmyadmin/phpmyadmin:latest
+  environment:
+   PMA_HOST: database
+   PMA_PORT: 3306
+  networks:
+   - rehash-db
+   - traefik
+  restart: always
+  labels:
+   - "traefik.enable=true"
+   - "traefik.docker.network=traefik_network"
+   - "traefik.http.routers.db-view.tls=true"
+   - "traefik.http.routers.db-view.rule=Host(`db-view.${BASE_URL}`)"
+   - "traefik.http.routers.db-view.entrypoints=websecure"
+   - "traefik.http.routers.db-view.service=db-view-service"
+   - "traefik.http.routers.db-view.tls.certresolver=myresolver"
+   - "traefik.http.services.db-view-service.loadbalancer.server.port=80"
+   - "traefik.http.routers.db-view.middlewares=db-view-auth"
+   - "traefik.http.middlewares.db-view-auth.basicauth.users=${DB_VIEW_USERS}"
  database:
   build:
    context: ./sn_mariadb/
