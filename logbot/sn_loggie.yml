@@ -1,0 +1,15 @@
+FROM python:2.7-alpine
+
+ENV LOGGIE_IRCSERVER=chat.soylentnews.org
+ENV LOGGIE_IRCPORT=6667
+ENV LOGGIE_CHANNELS=["#canary2","#canary"]
+ENV LOGGIE_IRCNICK=LoggieTest
+
+RUN mkdir -p /logs
+RUN echo "</body></html>" >> /logs/index.html
+RUN mkdir -p /config
+RUN mkdir -p /loggie
+ADD ./logbot /loggie
+
+
+CMD ["python", "/loggie/logbot.py"]

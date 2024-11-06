@@ -1,0 +1,290 @@
+FROM php:7.4-apache
+
+# System dependencies
+RUN set -eux; \
+	\
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
+		git \
+		librsvg2-bin \
+		imagemagick \
+		# Required for SyntaxHighlighting
+		python3 \
+	; \
+	rm -rf /var/lib/apt/lists/*
+
+# Install the PHP extensions we need
+RUN set -eux; \
+	\
+	savedAptMark="$(apt-mark showmanual)"; \
+	\
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
+		libicu-dev \
+		libonig-dev \
+	; \
+	\
+	docker-php-ext-install -j "$(nproc)" \
+		calendar \
+		intl \
+		mbstring \
+		mysqli \
+		opcache \
+	; \
+	\
+	pecl install APCu-5.1.21; \
+	docker-php-ext-enable \
+		apcu \
+	; \
+	rm -r /tmp/pear; \
+	\
+	# reset apt-mark's "manual" list so that "purge --auto-remove" will remove all build dependencies
+	apt-mark auto '.*' > /dev/null; \
+	apt-mark manual $savedAptMark; \
+	ldd "$(php -r 'echo ini_get("extension_dir");')"/*.so \
+		| awk '/=>/ { print $3 }' \
+		| sort -u \
+		| xargs -r dpkg-query -S \
+		| cut -d: -f1 \
+		| sort -u \
+		| xargs -rt apt-mark manual; \
+	\
+	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+	rm -rf /var/lib/apt/lists/*
+
+# Enable Short URLs
+RUN set -eux; \
+	a2enmod rewrite; \
+	{ \
+		echo "<Directory /var/www/html>"; \
+		echo "  RewriteEngine On"; \
+		echo "  RewriteCond %{REQUEST_FILENAME} !-f"; \
+		echo "  RewriteCond %{REQUEST_FILENAME} !-d"; \
+		echo "  RewriteRule ^ %{DOCUMENT_ROOT}/index.php [L]"; \
+		echo "</Directory>"; \
+	} > "$APACHE_CONFDIR/conf-available/short-url.conf"; \
+	a2enconf short-url
+
+# Enable AllowEncodedSlashes for VisualEditor
+RUN sed -i "s/<\/VirtualHost>/\tAllowEncodedSlashes NoDecode\n<\/VirtualHost>/" "$APACHE_CONFDIR/sites-available/000-default.conf"
+
+# set recommended PHP.ini settings
+# see https://secure.php.net/manual/en/opcache.installation.php
+RUN { \
+		echo 'opcache.memory_consumption=128'; \
+		echo 'opcache.interned_strings_buffer=8'; \
+		echo 'opcache.max_accelerated_files=4000'; \
+		echo 'opcache.revalidate_freq=60'; \
+	} > /usr/local/etc/php/conf.d/opcache-recommended.ini
+
+# SQLite Directory Setup
+RUN set -eux; \
+	mkdir -p /var/www/data; \
+	chown -R www-data:www-data /var/www/data
+
+# Version
+#ENV MEDIAWIKI_MAJOR_VERSION 1.39
+#ENV MEDIAWIKI_VERSION 1.39.3
+
+# MediaWiki setup
+RUN set -eux; \
+	fetchDeps=" \
+		gnupg \
+		dirmngr \
+	"; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends $fetchDeps; \
+	\
+        git clone https://github.com/wikimedia/mediawiki.git mediawiki; \
+        cd mediawiki && git checkout REL1_41 && cd ..; \
+        mv ./mediawiki/* ./; \
+	chown -R www-data:www-data extensions skins cache images; \
+	\
+	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $fetchDeps; \
+	rm -rf /var/lib/apt/lists/*
+
+# Extension LabeledSectionTransclusion
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-LabeledSectionTransclusion.git LabeledSectionTransclusion && \
+ cd LabeledSectionTransclusion && \
+ git checkout REL1_41 
+
+# Extension AbuseFilter
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-AbuseFilter.git AbuseFilter && \
+ cd AbuseFilter && \
+ git checkout REL1_41
+
+# Extension AntiSpoof
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-AntiSpoof.git AntiSpoof && \
+ cd AntiSpoof && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-CheckUser.git CheckUser && \
+ cd CheckUser && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-CodeEditor.git CodeEditor && \
+ cd CodeEditor && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-ConfirmEdit.git ConfirmEdit && \
+ cd ConfirmEdit && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-DismissableSiteNotice.git DismissableSiteNotice && \
+ cd DismissableSiteNotice && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-Interwiki.git Interwiki && \
+ cd Interwiki && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-Renameuser.git Renameuser && \
+ cd Renameuser && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-SpamBlacklist.git SpamBlacklist && \
+ cd SpamBlacklist && \
+ git checkout  REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-SyntaxHighlight_GeSHi.git SyntaxHighlight_GeSHi && \
+ cd SyntaxHighlight_GeSHi && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-TitleBlacklist.git TitleBlacklist && \
+ cd TitleBlacklist && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-TorBlock.git TorBlock && \
+ cd TorBlock && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-TrustedXFF.git TrustedXFF && \
+ cd TrustedXFF && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-ConfirmAccount.git ConfirmAccount && \
+ cd ConfirmAccount && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-Cite.git Cite && \
+ cd Cite && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-Gadgets.git Gadgets && \
+ cd Gadgets && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \ 
+ git clone https://github.com/wikimedia/mediawiki-extensions-ImageMap.git ImageMap && \
+ cd ImageMap && \
+ git checkout REL1_41 
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-InputBox.git InputBox && \
+ cd InputBox && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \ 
+ git clone https://github.com/wikimedia/mediawiki-extensions-Nuke.git Nuke && \
+ cd Nuke && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \ 
+ git clone https://github.com/wikimedia/mediawiki-extensions-ParserFunctions.git ParserFunctions && \
+ cd ParserFunctions && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \ 
+ git clone https://github.com/wikimedia/mediawiki-extensions-Poem.git Poem && \
+ cd Poem && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \ 
+ git clone https://github.com/wikimedia/mediawiki-extensions-WikiEditor.git WikiEditor && \
+ cd WikiEditor && \
+ git checkout REL1_41
+
+
+# SKINS
+
+RUN mkdir -p /skins && \
+ cd /skins && \
+ git clone https://github.com/wikimedia/mediawiki-skins-Modern.git Modern && \
+ cd Modern && \
+ git checkout 84e9b33
+
+RUN mkdir -p /skins && \
+ cd /skins && \
+ git clone https://github.com/wikimedia/mediawiki-skins-CologneBlue.git CologneBlue && \
+ cd CologneBlue && \
+ git checkout 5106bd9
+
+RUN mkdir -p /skins && \
+ cd /skins && \
+ git clone https://github.com/wikimedia/mediawiki-skins-Vector.git Vector && \
+ cd Vector && \
+ git checkout REL1_41
+
+RUN mkdir -p /skins && \
+ cd /skins && \
+ git clone https://github.com/wikimedia/mediawiki-skins-MonoBook.git MonoBook && \
+ cd MonoBook && \
+ git checkout 7d31a60
+
+
+
+
+RUN cp -r /build/* /var/www/html/extensions/
+RUN cp -r /skins/* /var/www/html/skins/
+
+RUN set -eux; \
+        \
+        apt-get update; \
+        apt-get install -y --no-install-recommends \
+             unzip \
+        ; \
+        rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
+RUN cd /var/www/html/ && composer update --no-dev && cd /var/www/html/extensions/AbuseFilter/ && composer update
+

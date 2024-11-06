@@ -16,6 +16,11 @@ else
         export $(cat /secrets/development.env | xargs)
     fi
 fi
+project_name=$(basename "$PWD")
+
+if [ -f /secrets/$ENVIRONMENT/$project_name.env ]; then
+ export $(cat /secrets/$ENVIRONMENT/$project_name.env | xargs )
+fi
 
 if [ -f .env ]; then
     export $(cat .env | xargs)

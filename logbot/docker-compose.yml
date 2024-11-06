@@ -1,0 +1,35 @@
+version: "3"
+services:
+  loggie:
+    image: sn_loggie
+    restart: always
+    environment:
+      - LOGGIE_IRCSERVER
+      - LOGGIE_IRCPORT
+      - LOGGIE_CHANNELS
+      - LOGGIE_IRCNICK
+    networks:
+      - traefik
+    volumes:
+      - /opt/loggie/logs:/logs
+
+  httpd:
+    image: httpd:2-alpine
+    restart: always
+    volumes:
+      - /opt/loggie/logs:/usr/local/apache2/htdocs
+    labels:
+      traefik.enable: true
+      traefik.docker.network: traefik_network
+      traefik.http.routers.loggie.tls: true
+      traefik.http.routers.loggie.rule: Host(`logs.${BASE_URL}`) || Host(`logs.sylnt.us`)
+      traefik.http.routers.loggie.entrypoints: websecure
+      traefik.http.routers.loggie.service: www-logs-service
+      traefik.http.routers.loggie.tls.certresolver: myresolver
+      traefik.http.services.www-logs-service.loadbalancer.server.port: 80
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    name: traefik_network

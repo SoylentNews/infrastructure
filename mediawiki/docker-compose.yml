@@ -1,0 +1,57 @@
+version: "3"
+services:
+ mediawiki:
+  image: sn_mediawiki:REL1_41
+  restart: always
+  environment:
+   - BASE_URL
+   - MYSQL_DATABASE=${MYSQL_DB}
+   - MARIADB_DATABASE=${MYSQL_DB}
+   - MYSQL_USER
+   - MYSQL_PASSWORD
+   - MARIADB_USER
+   - MARIADB_PASSWORD
+#  ports:
+#   - 80:80
+  links:
+   - database
+  networks:
+   - traefik
+   - mediawiki-db
+  labels:
+   - "traefik.enable=true"
+   - "traefik.docker.network=traefik_network"
+   - "traefik.http.routers.mediawiki.tls=true"
+   - "traefik.http.routers.mediawiki.rule=Host(`wiki.${BASE_URL}`)"
+#   - "traefik.http.middlewares.mediawiki-middle.redirectregex.regex=^https://wiki.soylentnews.org/(.*)"
+#   - "traefik.http.middlewares.mediawiki-middle.redirectregex.replacement=https://wiki.staging.soylentnews.org/{1}"
+#   - "traefik.http.routers.mediawiki.middlewares=mediawiki-middle"
+   - "traefik.http.routers.mediawiki.entrypoints=websecure"
+   - "traefik.http.routers.mediawiki.service=www-media-service"
+   - "traefik.http.routers.mediawiki.tls.certresolver=myresolver"
+   - "traefik.http.services.www-media-service.loadbalancer.server.port=80"
+  volumes:
+   - /opt/mediawiki/images:/var/www/html/images
+   - ./LocalSettings.php:/var/www/html/LocalSettings.php
+ database:
+  image: mariadb
+  restart: always
+  networks:
+   - mediawiki-db
+  environment:
+   - MYSQL_DATABASE=${MYSQL_DB}
+   - MARIADB_DATABASE=${MYSQL_DB}
+   - MYSQL_USER
+   - MYSQL_PASSWORD
+   - MARIADB_USER
+   - MARIADB_PASSWORD
+   - MARIADB_ROOT_PASSWORD
+#   MYSQL_DATABASE: 
+#   MYSQL_USER: wikiuser
+#   MYSQL_PASSWORD: testing2023
+  volumes:
+   - /opt/mediawiki/db:/var/lib/mysql
+networks:
+ traefik:
+  name: traefik_network
+ mediawiki-db:

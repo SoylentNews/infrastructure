@@ -26,6 +26,7 @@ services:
    - atheme
   ports:
    - 6697:6697
+   - 6667:6667
 #   - 9797:9797
   volumes:
    - /opt/ircd/conf:/usr/local/etc/
