@@ -2,10 +2,12 @@
 source /secrets/production.env
 # Variables
 LOCAL_BACKUP_DIR="/opt/rehash/backup/"
+LOCAL_BACKUP_DIR_DEV="/opt/rehash-dev/backup/"
 LOCAL_SECRETS_DIR="/secrets/"
 REMOTE_USER="devops"
 REMOTE_HOST=$REMOTE_BACKUP_HOST
 REMOTE_BACKUP_DIR="/remote/backup/"
+REMOTE_BACKUP_DIR_DEV="/remote/backup-dev/"
 REMOTE_SECRETS_DIR="/remote/secrets/"
 LOCKFILE="/tmp/backup.lock"
 
@@ -36,6 +38,9 @@ rsync -avz -e "ssh -p $SSH_PORT" "$LOCAL_SECRETS_DIR" "$REMOTE_USER@$REMOTE_IP:$
 
 # Move files from /opt/rehash/backup/ to the remote host, keeping remote-only files
 rsync -avz -e "ssh -p $SSH_PORT" "$LOCAL_BACKUP_DIR" "$REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_DIR"
+
+rsync -avz --delete -e "ssh -p $SSH_PORT" "$LOCAL_BACKUP_DIR_DEV" "$REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_DIR_DEV" 
+
 
 # Check if rsync was successful
 if [ $? -eq 0 ]; then

@@ -11,7 +11,7 @@ update blocks set block=REPLACE(block,'https://soylentnews.org','https://{BASE_U
 update blocks set url=REPLACE(url,'//soylentnews.org', '//{BASE_URL}');
 update discussions set url=REPLACE(url,'//soylentnews.org', '//{BASE_URL}');
 update blocks set rdf=REPLACE(rdf,'//soylentnews.org', '//{BASE_URL}');
-
+update vars set value = '192.163.30.228' where name = 'smtp_server';
 
 CREATE TABLE IF NOT EXISTS sqlflags (
     id INT AUTO_INCREMENT PRIMARY KEY,

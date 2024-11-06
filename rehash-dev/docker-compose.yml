@@ -14,7 +14,8 @@ services:
     RELAYHOST: postfix
   restart: always
   env_file:
-   - /secrets/development.env
+   - /secrets/production.env
+   - ./.env
   links:
    - database
    - sphinx
@@ -30,7 +31,8 @@ services:
    - database
   restart: always
   env_file:
-   - /secrets/development.env
+   - /secrets/production.env
+   - ./.env
   networks:
    - rehash-db
   environment:
@@ -47,13 +49,15 @@ services:
    dockerfile: sn_mariadb.yml
   image: sn_mariadb
   restart: always
+  env_file:
+   - /secrets/production.env
   networks:
    - rehash-db
   environment:
    MYSQL_DATABASE: soylentnews
 #   MYSQL_USER:
 #   MYSQL_PASSWORD:
-   MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+#   MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
   volumes:
    - /opt/rehash-dev/db:/var/lib/mysql
 
@@ -62,8 +66,8 @@ services:
 #  container_name: varnish
   volumes:
     - ./soylentnews.vcl:/etc/varnish/default.vcl
-  ports:
-    - "2600:80"
+#  ports:
+#    - "2600:80"
   networks:
    - traefik
    - varnish
@@ -77,12 +81,12 @@ services:
   labels:
    - "traefik.enable=true"
    - "traefik.docker.network=traefik_network"
-   - "traefik.http.routers.rehash.tls=true"
-   - "traefik.http.routers.rehash.rule=Host(`www.${BASE_URL}`) || Host(`${BASE_URL}`)"
-   - "traefik.http.routers.rehash.entrypoints=websecure"
-   - "traefik.http.routers.rehash.service=www-rehash-service"
-   - "traefik.http.routers.rehash.tls.certresolver=myresolver"
-   - "traefik.http.services.www-rehash-service.loadbalancer.server.port=80"
+   - "traefik.http.routers.rehash-dev.tls=true"
+   - "traefik.http.routers.rehash-dev.rule=Host(`www.${BASE_URL}`) || Host(`${BASE_URL}`)"
+   - "traefik.http.routers.rehash-dev.entrypoints=websecure"
+   - "traefik.http.routers.rehash-dev.service=www-rehash-dev-service"
+   - "traefik.http.routers.rehash-dev.tls.certresolver=myresolver"
+   - "traefik.http.services.www-rehash-dev-service.loadbalancer.server.port=80"
  sphinx:
   image: sphinx
   build:
@@ -96,7 +100,8 @@ services:
   depends_on:
    - database
   env_file:
-   - /secrets/development.env
+   - /secrets/production.env
+   - ./.env
   environment:
    MYSQL_HOST: database
 #   MYSQL_USER:
