@@ -1,0 +1,28 @@
+version: "3"
+services:
+ irccat:
+  image: sn_irccat
+  restart: always
+  user: root
+  entrypoint: ["/custom-entrypoint.sh"]
+  environment:
+   - BASE_URL
+  networks:
+   - traefik
+  labels:
+   - "traefik.enable=true"
+   - "traefik.docker.network=traefik_network"
+   - "traefik.http.routers.irccat.tls=true"
+   - "traefik.http.routers.irccat.rule=Host(`githook.${BASE_URL}`)"
+   - "traefik.http.routers.irccat.entrypoints=websecure"
+   - "traefik.http.routers.irccat.service=irccat-service"
+   - "traefik.http.routers.irccat.tls.certresolver=myresolver"
+   - "traefik.http.services.irccat-service.loadbalancer.server.port=8045"
+  volumes:
+   - /opt/irccat/irccat.json:/etc/irccat.json
+   - ./update-hosts.sh:/update-hosts.sh
+   - ./custom-entrypoint.sh:/custom-entrypoint.sh
+networks:
+ traefik:
+  name: traefik_network
+  external: true

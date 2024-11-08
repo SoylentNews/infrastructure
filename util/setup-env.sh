@@ -18,6 +18,10 @@ append_env_vars() {
             # Split the line into key and value
             key=$(echo "$line" | cut -d= -f1)
             value=$(echo "$line" | cut -d= -f2-)
+	    # Skip if key is empty
+            if [ -z "$key" ]; then
+		continue
+	    fi
             combined_env["$key"]="$value"
         done < "$file"
     fi

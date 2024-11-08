@@ -1,0 +1,37 @@
+{
+  "tcp": {
+    "listen": ":12345"
+  },
+  "http": {
+    "listen": ":8045",
+    "tls": false,
+    "tls_key": "",
+    "tls_cert": "",
+    "listeners": {
+      "generic": true,
+      "grafana": "#channel",
+      "github": {
+	"secret": "2801cd3864c5c4dc85e5",
+	"default_channel": "#dev",
+	"repositories": {
+	    "irccat": "#irccat-dev"
+	}
+       }
+    }
+  },
+  "irc": {
+    "server": "irc.soylentnews.org:6697",
+    "tls": true,
+    "tls_skip_verify": false,
+    "nick": "devbot",
+    "realname": "dev bot",
+    "identify_pass": "D3VB0T4LYF3",
+    "channels": ["#dev", "#soylent"],
+    "keys": {"#channel": "join_key"}
+  },
+  "commands": {
+    "auth_channel": "#channel",
+    "handler": "/misc/command_handler.py",
+    "max_response_lines": 15
+  }
+}

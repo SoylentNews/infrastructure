@@ -1,0 +1,6 @@
+[submodule "irc-hooks/irc-hooks/irccat"]
+	path = irc-hooks/irc-hooks/irccat
+	url = https://github.com/irccloud/irccat.git
+[submodule "irc-hooks/irccat"]
+	path = irc-hooks/irccat
+	url = https://github.com/irccloud/irccat.git
