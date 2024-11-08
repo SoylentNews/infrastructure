@@ -43,7 +43,8 @@ services:
       - "${IPV6_ADDRESS}:8081:8081"
       - "${IPV6_ADDRESS}:7000:7000"
       - "${IPV6_ADDRESS}:8000:8000"
-      - "${IPV6_ADDRESS}:80:80"# - "6697:6697"
+      - "${IPV6_ADDRESS}:80:80"
+# - "6697:6697"
   networks:
    - traefik
   volumes:
@@ -55,9 +56,9 @@ services:
    image: ldez/traefik-certs-dumper:v2.8.1
    container_name: traefik-certs-dumper
    environment:
-    BASE_URL: testing.soylentnews.org
+    BASE_URL: soylentnews.org
    entrypoint: sh -c '
-      apk add jq
+      apk add jq openssl
       ; while ! [ -e /data/acme.json ]
       || ! [ `jq ".[] | .Certificates | length" /data/acme.json` != 0 ]; do
       sleep 1

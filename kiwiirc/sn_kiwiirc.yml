@@ -1,0 +1,55 @@
+# Stage 1: Build stage
+FROM node:18-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+RUN apk add --no-cache git
+
+# Build kiwiirc
+RUN git clone https://github.com/kiwiirc/kiwiirc.git && \
+    cd kiwiirc && \
+    git checkout d294150 && \
+    yarn install && \
+    yarn run build
+
+# Build webircgateway
+FROM golang:1.17 AS builder2
+
+# Set working directory
+WORKDIR /app
+
+RUN git clone --depth=1 --single-branch https://github.com/kiwiirc/webircgateway && \
+    cd webircgateway && \
+    go get github.com/kiwiirc/webircgateway && \
+    go build -o webircgateway main.go
+
+# Stage 2: Final stage
+FROM node:18-alpine
+
+# need groupadd and glibc
+RUN apk add --no-cache shadow wget && \
+    wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub && \
+    wget https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.34-r0/glibc-2.34-r0.apk && \
+    apk add --force-overwrite glibc-2.34-r0.apk
+
+# Create user and group
+RUN groupadd -g 50000 devops && \
+    useradd -r -u 50000 -g devops devop
+
+
+# Set working directory
+WORKDIR /app
+
+# Copy built files from builder stages
+COPY --from=builder /app/kiwiirc/dist /app/www
+COPY --from=builder2 /app/webircgateway/webircgateway /app/kiwiirc
+
+# Change ownership of the files
+RUN chown -R devop:devops /app
+
+# Switch to non-root user
+USER root
+
+# Set entrypoint
+ENTRYPOINT ["./kiwiirc"]

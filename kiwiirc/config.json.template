@@ -1,0 +1,32 @@
+
+{
+    "windowTitle": "Soylent News Web IRC",
+    "startupScreen": "welcome",
+    "kiwiServer": "https://irc.soylentnews.org/webirc/kiwiirc",
+    "restricted": false,
+    "theme": "Default",
+    "themes": [
+        { "name": "Default", "url": "static/themes/default" },
+        { "name": "Dark", "url": "static/themes/dark" },
+        { "name": "Coffee", "url": "static/themes/coffee" },
+        { "name": "GrayFox", "url": "static/themes/grayfox" },
+        { "name": "Nightswatch", "url": "static/themes/nightswatch" },
+        { "name": "Osprey", "url": "static/themes/osprey" },
+        { "name": "Radioactive", "url": "static/themes/radioactive" },
+        { "name": "Sky", "url": "static/themes/sky" },
+        { "name": "Elite", "url": "static/themes/elite" }
+    ],
+    "startupOptions" : {
+        "channel": "#soylent",
+        "nick": "soylentil?",
+	"server": "irc.soylentnews.org",
+        "port": 6697,
+        "tls": true,
+    },
+    "embedly": {
+        "key": ""
+    },
+    "plugins": [
+        { "name": "customise", "url": "static/plugins/customise.html" }
+    ]
+}

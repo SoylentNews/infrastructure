@@ -14,7 +14,7 @@ services:
       - /opt/loggie/logs:/logs
 
   httpd:
-    image: httpd:2-alpine
+    image: sn_http
     restart: always
     volumes:
       - /opt/loggie/logs:/usr/local/apache2/htdocs
@@ -22,7 +22,7 @@ services:
       traefik.enable: true
       traefik.docker.network: traefik_network
       traefik.http.routers.loggie.tls: true
-      traefik.http.routers.loggie.rule: Host(`logs.${BASE_URL}`) || Host(`logs.sylnt.us`)
+      traefik.http.routers.loggie.rule: Host(`logs.${BASE_URL}`) || Host(`logs.sylnt.us`) || Host(`stats.${BASE_URL}`) || Host(`stats.sylnt.us`)
       traefik.http.routers.loggie.entrypoints: websecure
       traefik.http.routers.loggie.service: www-logs-service
       traefik.http.routers.loggie.tls.certresolver: myresolver

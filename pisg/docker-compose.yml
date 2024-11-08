@@ -1,0 +1,8 @@
+services:
+  pisg:
+    image: sn_pisg
+    container_name: pisg
+    volumes:
+      - /opt/eggbot/logs/#soylent/:/logs/
+      - /opt/loggie/logs/stats:/stats/
+      - ./pisg.cfg:/usr/app/pisg.cfg

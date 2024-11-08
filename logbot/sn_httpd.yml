@@ -1,0 +1,3 @@
+FROM httpd:2-alpine
+COPY httpd-custom.conf /usr/local/apache2/conf/httpd-custom.conf
+RUN echo "Include /usr/local/apache2/conf/httpd-custom.conf" >> /usr/local/apache2/conf/httpd.conf

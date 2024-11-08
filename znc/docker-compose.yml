@@ -1,0 +1,21 @@
+services:
+  znc:
+    image: znc:full
+    ports:
+     - 60000:60000
+    volumes:
+     - /opt/znc/data:/znc-data
+     - /opt/letsencrypt/certs/certs/znc-cert.pem:/znc-data/znc-cert.pem
+     - /opt/letsencrypt/certs/certs/znc-cert.pem:/znc-data/znc-cert.pem
+     - /opt/letsencrypt/certs/certs/znc-dhparam.pem:/znc-data/znc-dhparam.pem
+     - /opt/letsencrypt/certs/private/znc-key.pem:/znc-data/znc-key.pem
+     - ./custom-entry.sh:/custom-entry.sh
+    entrypoint: ["/custom-entry.sh"]
+    restart: always
+    networks:
+      - traefik
+
+networks:
+ traefik:
+  name: traefik_network
+  external: true
