@@ -11,9 +11,11 @@
       "generic": true,
       "grafana": "#channel",
       "github": {
-	"secret": "2801cd3864c5c4dc85e5",
+	"secret": "{{IRCCAT_GITHUB_SECRET}}",
 	"default_channel": "#dev",
 	"repositories": {
+            "rehash": ["#soylent", "#dev"],
+            "infrastructure": ["#soylent", "#dev"],
 	    "irccat": "#irccat-dev"
 	}
        }
@@ -25,7 +27,7 @@
     "tls_skip_verify": false,
     "nick": "devbot",
     "realname": "dev bot",
-    "identify_pass": "D3VB0T4LYF3",
+    "identify_pass": "{{IRCCAT_DEVBOT_IDENT_PASS}}",
     "channels": ["#dev", "#soylent"],
     "keys": {"#channel": "join_key"}
   },
