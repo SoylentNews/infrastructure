@@ -13,7 +13,7 @@ LOCKFILE="/tmp/backup.lock"
 
 
 # Array of directories to copy
-DIRECTORIES_TO_COPY=("/opt/atheme/" "/opt/ircd/")
+DIRECTORIES_TO_COPY=("/opt/atheme/" "/opt/ircd/" "/opt/loggie/" "/opt/eggbot/" "/opt/mail/mailu")
 
 
 # Extract IP and port from REMOTE_HOST
@@ -34,12 +34,12 @@ touch "$LOCKFILE"
 
 
 # Sync /secrets/* to the remote host
-rsync -avz -e "ssh -p $SSH_PORT" "$LOCAL_SECRETS_DIR" "$REMOTE_USER@$REMOTE_IP:$REMOTE_SECRETS_DIR"
+sudo rsync -avz -e "ssh -p $SSH_PORT" --rsync-path="sudo rsync" "$LOCAL_SECRETS_DIR" "$REMOTE_USER@$REMOTE_IP:$REMOTE_SECRETS_DIR"
 
 # Move files from /opt/rehash/backup/ to the remote host, keeping remote-only files
-rsync -avz -e "ssh -p $SSH_PORT" "$LOCAL_BACKUP_DIR" "$REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_DIR"
+sudo rsync -avz -e "ssh -p $SSH_PORT" --rsync-path="sudo rsync" "$LOCAL_BACKUP_DIR" "$REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_DIR"
 
-rsync -avz --delete -e "ssh -p $SSH_PORT" "$LOCAL_BACKUP_DIR_DEV" "$REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_DIR_DEV" 
+sudo rsync -avz --delete -e "ssh -p $SSH_PORT" --rsync-path="sudo rsync" "$LOCAL_BACKUP_DIR_DEV" "$REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_DIR_DEV" 
 
 
 # Check if rsync was successful
@@ -54,7 +54,7 @@ for DIR in "${DIRECTORIES_TO_COPY[@]}"; do
         BASE_NAME=$(basename "$DIR")
         REMOTE_DIR="/remote/conf/$BASE_NAME/"
         echo "Copying $DIR to $REMOTE_USER@$REMOTE_IP:$REMOTE_DIR"
-        rsync -avz -e "ssh -p $SSH_PORT" "$DIR" "$REMOTE_USER@$REMOTE_IP:$REMOTE_DIR"
+        sudo rsync -avz -e "ssh -p $SSH_PORT" --rsync-path="sudo rsync" "$DIR" "$REMOTE_USER@$REMOTE_IP:$REMOTE_DIR"
     else
         echo "Directory $DIR does not exist."
     fi
