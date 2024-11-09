@@ -1,0 +1,32 @@
+FROM alpine:3.20.0
+
+RUN arch=$([ "$(arch)" = 'aarch64' ] && echo -n 'arm64' || echo -n 'amd64') \
+  && apk update \
+  && apk upgrade \
+  && apk add \
+    mariadb-client \
+    pdns \
+    pdns-backend-mysql \
+    pdns-doc \
+  && wget -O subvars.apk https://github.com/kha7iq/subvars/releases/download/v0.1.5/subvars_${arch}.apk \
+  && apk add --allow-untrusted subvars.apk \
+  && rm -rf subvars.apk /var/cache/apk/*
+
+RUN mkdir -p /run/pdns \
+  && chown -R pdns: /etc/pdns /run/pdns
+
+COPY pdns.conf.tpl docker-entrypoint.sh /
+
+ENV VERSION=4.9 \
+  PDNS_guardian=yes \
+  PDNS_setuid=pdns \
+  PDNS_setgid=pdns \
+  PDNS_launch=gmysql
+
+EXPOSE 53 53/udp
+
+HEALTHCHECK --interval=10s --timeout=10s --retries=3 --start-period=2s CMD ["pdns_control", "ping"]
+
+ENTRYPOINT [ "/docker-entrypoint.sh" ]
+
+CMD [ "/usr/sbin/pdns_server" ]
