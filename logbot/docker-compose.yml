@@ -3,16 +3,20 @@ services:
   loggie:
     image: sn_loggie
     restart: always
+    user: root
+    entrypoint: ["/custom-entrypoint.sh"]
     environment:
       - LOGGIE_IRCSERVER
       - LOGGIE_IRCPORT
       - LOGGIE_CHANNELS
       - LOGGIE_IRCNICK
+      - BASE_URL
     networks:
       - traefik
     volumes:
       - /opt/loggie/logs:/logs
-
+      - ./update-hosts.sh:/update-hosts.sh
+      - ./custom-entrypoint.sh:/custom-entrypoint.sh
   httpd:
     image: sn_http
     restart: always
@@ -33,3 +37,4 @@ services:
 networks:
   traefik:
     name: traefik_network
+   

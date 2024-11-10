@@ -26,8 +26,10 @@ services:
      - traefik
      - default
     ports:
-      - "53:53"
-      - "53:53/udp"
+      - "192.163.30.227:53:53"
+      - "192.163.30.227:53:53/udp"
+      - "[2602:fd63:12::2]:53:53"
+      - "[2602:fd63:12::2]:53:53/udp"
 #      - "8081:8081"
     environment:
       - PDNS_gmysql_host=db
@@ -47,8 +49,8 @@ services:
       - PDNS_webserver_password
       - PDNS_version_string=anonymous
       - PDNS_default_ttl=1500
-      - PDNS_allow_notify_from=0.0.0.0,50.116.25.207,172.31.0.1
-      - PDNS_allow_axfr_ips=127.0.0.1,2600:3c00::f03c:91ff:fe6e:1d88,50.116.25.207
+      - PDNS_allow_notify_from=0.0.0.0,50.116.25.207,172.31.0.1,69.43.31.82,192.163.30.227,192.163.30.228
+      - PDNS_allow_axfr_ips=127.0.0.1,2600:3c00::f03c:91ff:fe6e:1d88,50.116.25.207,69.43.31.82,192.163.30.227,192.163.30.228
   admin:
     image: sn_pdns_admin
     volumes:

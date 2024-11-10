@@ -74,7 +74,7 @@ if [ -f ./pre-hook.sh ]; then
 fi
 
 # Iterate over all .template files in the current directory
-for template in ./*.template; do
+for template in ./*.template .*.template; do
     if [ -f "$template" ]; then
         output="${template%.template}"
         replace_placeholders "$template" "$output"

@@ -1,0 +1,20 @@
+version: "3"
+services:
+  irpg:
+    image: sn_irpg
+    restart: always
+    user: root
+    entrypoint: ["/bin/sh", "-c", "/update-hosts.sh & sleep 3 && su - botuser -c 'cd /home/botuser/src && perl bot.v3.1.2.pl && tail -f debug.txt'"]
+    environment:
+      - BASE_URL
+      - IRPG_IDENT
+    networks:
+      - traefik
+    volumes:
+      - /opt/irpg:/data
+      - /opt/irpg/irpg.db:/home/botuser/src/irpg.db
+      - /opt/irpg/.irpg.conf:/home/botuser/src/.irpg.conf
+      - ./update-hosts.sh:/update-hosts.sh
+networks:
+  traefik:
+    name: traefik_network

@@ -1,15 +1,23 @@
 FROM python:2.7-alpine
 
-ENV LOGGIE_IRCSERVER=chat.soylentnews.org
+ENV LOGGIE_IRCSERVER=irc.soylentnews.org
 ENV LOGGIE_IRCPORT=6667
-ENV LOGGIE_CHANNELS=["#canary2","#canary"]
-ENV LOGGIE_IRCNICK=LoggieTest
+ENV LOGGIE_CHANNELS=["#soylent"]
+ENV LOGGIE_IRCNICK=Loggie
 
-RUN mkdir -p /logs
-RUN echo "</body></html>" >> /logs/index.html
-RUN mkdir -p /config
-RUN mkdir -p /loggie
+RUN apk add sed sudo
+# Create the user with specific UID and GID
+RUN addgroup -g 50000 botgroup && \
+    adduser -u 50000 -G botgroup -h /home/botuser -D botuser
+
+# Create necessary directories and set ownership
+RUN mkdir -p /logs /config /loggie && \
+    chown -R botuser:botgroup /logs /config /loggie
+
+# Add the logbot files
 ADD ./logbot /loggie
+RUN chown -R botuser:botgroup /loggie
 
+USER botuser:botgroup
 
 CMD ["python", "/loggie/logbot.py"]

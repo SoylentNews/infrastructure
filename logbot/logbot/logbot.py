@@ -266,7 +266,7 @@ class Logbot(SingleServerIRCBot):
         SingleServerIRCBot.__init__(self,
                                     [(server, port, server_pass)],
                                     nick,
-                                    nick)
+                                    "bot")
 
         self.chans = [x.lower() for x in channels]
         self.format = format
