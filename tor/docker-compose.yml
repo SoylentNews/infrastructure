@@ -1,0 +1,27 @@
+services:
+  tor:
+    image: tor
+    environment:
+     - SECRET_KEY
+     - PUBLIC_KEY
+     - HOSTNAME
+    volumes:
+      - /opt/tor:/data
+    networks:
+     - traefik
+  nginx:
+    image: nginx:latest
+    entrypoint: ["/custom-entrypoint.sh"]
+    environment:
+     - BASE_URL
+    networks:
+     - traefik
+    volumes:
+     - ./custom-entrypoint.sh:/custom-entrypoint.sh
+     - ./update-hosts.sh:/update-hosts.sh
+     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+networks:
+ traefik:
+  name: traefik_network
+  external: true
