@@ -28,6 +28,7 @@ impl KarmaDatabase {
 
     pub fn load_item(&mut self, channel: &str, key: &str) -> &mut KarmaItem {
         let lookup = format!("{}-{}", channel, key);
+        let channel = if channel.is_empty() { "-".to_string() } else { format!("{}", channel) };
         let filename = format!("{}-{}", channel.replace("#", "-"), key);
 
         if !self.items.contains_key(&lookup) {
@@ -48,6 +49,7 @@ impl KarmaDatabase {
 
     pub fn save_item(&self, channel: &str, key: &str) {
         let lookup = format!("{}-{}", channel, key);
+        let channel = if channel.is_empty() { "-".to_string() } else { format!("{}", channel) };
         let filename = format!("{}-{}", channel.replace("#", "-"), key);
 
         if let Some(item) = self.items.get(&lookup) {
