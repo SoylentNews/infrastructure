@@ -1,0 +1,18 @@
+version: "3"
+services:
+  bender:
+    image: sn_bender
+    restart: always
+    user: root
+    entrypoint: ["/bin/sh", "-c", "/update-hosts.sh & sleep 3 && su -m appuser -c 'cd /bin && ./server'"]
+    environment:
+      - BASE_URL
+    networks:
+      - traefik
+    volumes:
+      - ./update-hosts.sh:/update-hosts.sh
+      - /opt/bender:/data
+      - ./config.toml:/bin/config.toml
+networks:
+  traefik:
+    name: traefik_network

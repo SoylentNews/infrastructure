@@ -1,0 +1,6 @@
+server = "irc.soylentnews.org"
+port = 6697
+nickname = "bender"
+realname = "bot"
+channels = ["#soylent"]
+db_path = "/data/"
