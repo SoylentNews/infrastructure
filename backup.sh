@@ -1,4 +1,5 @@
 #!/bin/bash
+# exit 0
 source /secrets/production.env
 # Variables
 LOCAL_BACKUP_DIR="/opt/rehash/backup/"
@@ -6,14 +7,27 @@ LOCAL_BACKUP_DIR_DEV="/opt/rehash-dev/backup/"
 LOCAL_SECRETS_DIR="/secrets/"
 REMOTE_USER="devops"
 REMOTE_HOST=$REMOTE_BACKUP_HOST
-REMOTE_BACKUP_DIR="/remote/backup/"
-REMOTE_BACKUP_DIR_DEV="/remote/backup-dev/"
-REMOTE_SECRETS_DIR="/remote/secrets/"
+REMOTE_BACKUP_DIR="/home/remote/backup/"
+REMOTE_BACKUP_DIR_DEV="/home/remote/backup-dev/"
+REMOTE_SECRETS_DIR="/home/remote/secrets/"
 LOCKFILE="/tmp/backup.lock"
 
 
 # Array of directories to copy
-DIRECTORIES_TO_COPY=("/opt/atheme/" "/opt/ircd/" "/opt/loggie/" "/opt/eggbot/" "/opt/mail/mailu")
+declare -A DIRECTORIES_TO_COPY=(
+    ["/opt/atheme/"]="atheme/"
+    ["/opt/ircd/"]="ircd/"
+    ["/opt/loggie/"]="loggie/"
+    ["/opt/eggbot/"]="eggbot/"
+    ["/opt/mail/mailu/"]="mailu/"
+    ["/opt/bender/"]="bender/"
+    ["/opt/irpg/"]="irpg/"
+    ["/opt/dns/backup/"]="pdns-db/"
+    ["/opt/mediawiki/images/"]="mediawiki-img/"
+    ["/opt/mediawiki/backup/"]="mediawiki-db/"
+    ["/opt/tor/"]="tor/"
+    ["/opt/znc/data/"]="znc/"
+)
 
 
 # Extract IP and port from REMOTE_HOST
@@ -39,7 +53,7 @@ sudo rsync -avz -e "ssh -p $SSH_PORT" --rsync-path="sudo rsync" "$LOCAL_SECRETS_
 # Move files from /opt/rehash/backup/ to the remote host, keeping remote-only files
 sudo rsync -avz -e "ssh -p $SSH_PORT" --rsync-path="sudo rsync" "$LOCAL_BACKUP_DIR" "$REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_DIR"
 
-sudo rsync -avz --delete -e "ssh -p $SSH_PORT" --rsync-path="sudo rsync" "$LOCAL_BACKUP_DIR_DEV" "$REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_DIR_DEV" 
+sudo rsync -avz --delete -e "ssh -p $SSH_PORT" --rsync-path="sudo rsync" "$LOCAL_BACKUP_DIR_DEV" "$REMOTE_USER@$REMOTE_IP:$REMOTE_BACKUP_DIR_DEV"
 
 
 # Check if rsync was successful
@@ -49,10 +63,10 @@ else
     echo "Error during backup and sync."
 fi
 
-for DIR in "${DIRECTORIES_TO_COPY[@]}"; do
+for DIR in "${!DIRECTORIES_TO_COPY[@]}"; do
+    REMOTE_RELATIVE_PATH="${DIRECTORIES_TO_COPY[$DIR]}"
     if [ -d "$DIR" ]; then
-        BASE_NAME=$(basename "$DIR")
-        REMOTE_DIR="/remote/conf/$BASE_NAME/"
+        REMOTE_DIR="/home/remote/conf/$REMOTE_RELATIVE_PATH"
         echo "Copying $DIR to $REMOTE_USER@$REMOTE_IP:$REMOTE_DIR"
         sudo rsync -avz -e "ssh -p $SSH_PORT" --rsync-path="sudo rsync" "$DIR" "$REMOTE_USER@$REMOTE_IP:$REMOTE_DIR"
     else

@@ -12,6 +12,26 @@ services:
      - default
     volumes:
       - /opt/dns/mysql/:/var/lib/mysql
+  backup:
+   build:
+    context: ./db-backup/
+   restart: always
+   env_file:
+    - /secrets/production.env
+   environment:
+    - MYSQL_USER=pdns
+    - MYSQL_PASSWORD
+    - MYSQL_HOST=db
+    - MYSQL_DB=powerdnsadmin
+    - ENCRYPT_PASSWORD
+   volumes:
+    - /opt/dns/backup:/backup
+   networks:
+    - default
+   links:
+    - "db:db"
+   depends_on:
+    - db
   pdns:
     image: sn_pdns
     hostname: ns0.${BASE_URL}

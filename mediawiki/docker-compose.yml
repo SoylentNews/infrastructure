@@ -23,9 +23,6 @@ services:
    - "traefik.docker.network=traefik_network"
    - "traefik.http.routers.mediawiki.tls=true"
    - "traefik.http.routers.mediawiki.rule=Host(`wiki.${BASE_URL}`)"
-#   - "traefik.http.middlewares.mediawiki-middle.redirectregex.regex=^https://wiki.soylentnews.org/(.*)"
-#   - "traefik.http.middlewares.mediawiki-middle.redirectregex.replacement=https://wiki.staging.soylentnews.org/{1}"
-#   - "traefik.http.routers.mediawiki.middlewares=mediawiki-middle"
    - "traefik.http.routers.mediawiki.entrypoints=websecure"
    - "traefik.http.routers.mediawiki.service=www-media-service"
    - "traefik.http.routers.mediawiki.tls.certresolver=myresolver"
@@ -33,6 +30,25 @@ services:
   volumes:
    - /opt/mediawiki/images:/var/www/html/images
    - ./LocalSettings.php:/var/www/html/LocalSettings.php
+ backup:
+  build:
+   context: ./db-backup/
+  depends_on:
+   - database
+  restart: always
+  networks:
+   - mediawiki-db
+  environment:
+   - MYSQL_USER
+   - MYSQL_PASSWORD
+   - MARIADB_USER
+   - MARIADB_PASSWORD
+   - MYSQL_HOST=database
+   - MYSQL_DB
+   - ENCRYPT_PASSWORD
+  volumes:
+   - /opt/mediawiki/backup:/backup
+
  database:
   image: mariadb
   restart: always
@@ -46,9 +62,6 @@ services:
    - MARIADB_USER
    - MARIADB_PASSWORD
    - MARIADB_ROOT_PASSWORD
-#   MYSQL_DATABASE: 
-#   MYSQL_USER: wikiuser
-#   MYSQL_PASSWORD: testing2023
   volumes:
    - /opt/mediawiki/db:/var/lib/mysql
 networks:
