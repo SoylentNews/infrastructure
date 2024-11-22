@@ -3,9 +3,10 @@ import irc.bot
 import irc.strings
 import json
 import os
+import re
 import time
 from threading import Timer
-from message_templates import message_templates
+from message_templates import message_templates, locations, effectiveness_pools
 
 DATABASE_FILE = "players.json"
 
@@ -52,7 +53,7 @@ class NPC:
         self.hp = 50
         self.weapon = 'claws'
         self.alive = True
-        
+
 class IRCBot(irc.bot.SingleServerIRCBot):
     def __init__(self, channel, nickname, server, port=6667):
         irc.bot.SingleServerIRCBot.__init__(self, [(server, port)], nickname, nickname)
@@ -87,10 +88,10 @@ class IRCBot(irc.bot.SingleServerIRCBot):
             self.save_players()
             connection.privmsg(self.channel, f"Welcome {clean_nick}! You have been added to the game.")
 
-
     def on_pubmsg(self, connection, event):
         message = event.arguments[0]
         nick = event.source.nick
+        vhost = event.source.host
 
         if message.startswith("#fitectl status"):
             self.handle_status(connection, nick)
@@ -105,6 +106,8 @@ class IRCBot(irc.bot.SingleServerIRCBot):
             self.handle_armor(connection, nick, armor)
         elif message == "#fite The good fairy has come along and revived everyone":
             self.handle_revive_all(connection)
+        elif vhost.startswith("Soylent/Staff/") and message == "#suckit":
+            self.handle_reset_now(connection)
 
     def handle_status(self, connection, nick):
         if nick not in self.players:
@@ -159,6 +162,10 @@ class IRCBot(irc.bot.SingleServerIRCBot):
         self.save_players()
         connection.privmsg(self.channel, "The good fairy has come along and revived everyone.")
 
+    def handle_reset_now(self, connection):
+        self.handle_revive_all(connection)
+        connection.privmsg(self.channel, "Reset triggered by Soylent/Staff member.")
+
     def combat(self, connection, player, opponent):
         if not player.alive:
             connection.privmsg(self.channel, f"{player.name} is dead and cannot fight.")
@@ -167,9 +174,7 @@ class IRCBot(irc.bot.SingleServerIRCBot):
             connection.privmsg(self.channel, f"{opponent.name} is already dead.")
             return
 
-        degrees_of_hits = ["light", "moderate", "heavy", "critical", "defense"]
-        locations = ["head", "arm", "leg", "torso"]
-        effectiveness = ["barely", "solidly", "devastatingly"]
+
 
         while player.alive and opponent.alive:
             player_attack = random.randint(1, 20)
@@ -178,10 +183,12 @@ class IRCBot(irc.bot.SingleServerIRCBot):
             if player_attack > opponent_attack:
                 damage = random.randint(5, 15)
                 hit_degree = determine_hit_degree(damage)
+                hit_effectiveness = random.choice(effectiveness_pools[hit_degree])
+
                 if random.random() < 0.1:  # 10% chance for defense
                     hit_degree = "defense"
                 hit_location = random.choice(locations)
-                hit_effectiveness = random.choice(effectiveness)
+
                 if hit_degree == "defense":
                     damage = int(damage * 0.5)  # Reduce damage by 50%
                     message_template = random.choice(message_templates["defense"])
@@ -201,10 +208,13 @@ class IRCBot(irc.bot.SingleServerIRCBot):
             else:
                 damage = random.randint(5, 15)
                 hit_degree = determine_hit_degree(damage)
+                hit_effectiveness = random.choice(effectiveness_pools[hit_degree])
+
                 if random.random() < 0.1:  # 10% chance for defense
                     hit_degree = "defense"
+                    
                 hit_location = random.choice(locations)
-                hit_effectiveness = random.choice(effectiveness)
+
                 if hit_degree == "defense":
                     damage = int(damage * 0.5)  # Reduce damage by 50%
                     message_template = random.choice(message_templates["defense"])
@@ -279,7 +289,7 @@ def determine_hit_degree(damage):
         return "light"
     elif damage <= 10:
         return "moderate"
-    elif damage <= 15:
+    elif damage < 15:
         return "heavy"
     else:
         return "critical"

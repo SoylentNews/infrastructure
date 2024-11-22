@@ -164,3 +164,55 @@ locations = [
         "tailbone",
         "scalp"
     ]
+
+
+effectiveness_pools = {
+            "light": [
+                "barely",
+                "weakly",
+                "lightly",
+                "gently",
+                "softly",
+                "feebly",
+                "timidly",
+                "half-heartedly",
+                "ineffectively",
+                "mildly",
+            ],
+            "moderate": [
+                "solidly",
+                "firmly",
+                "steadily",
+                "soundly",
+                "resolutely",
+                "decisively",
+                "robustly",
+                "vigorously",
+                "competently",
+                "effectively",
+            ],
+            "heavy": [
+                "devastatingly",
+                "powerfully",
+                "forcefully",
+                "brutally",
+                "ferociously",
+                "savagely",
+                "intensely",
+                "relentlessly",
+                "mercilessly",
+                "with great impact",
+            ],
+            "critical": [
+                "critically",
+                "lethally",
+                "mortally",
+                "fatally",
+                "gruesomely",
+                "viciously",
+                "bloodily",
+                "with deadly precision",
+                "with fatal force",
+                "with a bone-crushing blow",
+            ],
+        }
