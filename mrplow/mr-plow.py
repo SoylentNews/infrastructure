@@ -63,6 +63,9 @@ class IRCBot(irc.bot.SingleServerIRCBot):
         self.schedule_reset()
         self.schedule_leaderboard_announcement()
 
+    def clean_nick(self, nick):
+        return re.sub(r'^[\@\+\~\&\%]', '', nick)
+
     def on_welcome(self, connection, event):
         connection.join(self.channel)
         connection.privmsg("ChanServ", f"OP {self.channel}")
@@ -71,16 +74,19 @@ class IRCBot(irc.bot.SingleServerIRCBot):
 
     def on_namreply(self, connection, event):
         for nick in event.arguments[2].split():
-            if nick not in self.players:
-                self.players[nick] = Player(nick)
+            clean_nick = self.clean_nick(nick)
+            if clean_nick not in self.players:
+                self.players[clean_nick] = Player(clean_nick)
                 self.save_players()
 
     def on_join(self, connection, event):
         nick = event.source.nick
-        if nick not in self.players:
-            self.players[nick] = Player(nick)
+        clean_nick = self.clean_nick(nick)
+        if clean_nick not in self.players:
+            self.players[clean_nick] = Player(clean_nick)
             self.save_players()
-            connection.privmsg(self.channel, f"Welcome {nick}! You have been added to the game.")
+            connection.privmsg(self.channel, f"Welcome {clean_nick}! You have been added to the game.")
+
 
     def on_pubmsg(self, connection, event):
         message = event.arguments[0]
