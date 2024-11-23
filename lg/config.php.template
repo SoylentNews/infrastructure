@@ -1,0 +1,77 @@
+<?php
+
+/*
+ * Main configuration file example.
+ *
+ * DO NOT EDIT NOR RENAME, please copy to 'config.php' and edit the new file!
+ */
+
+// People to contact
+// Set both to null to not display any contact information
+$config['contact']['name'] = 'Example Support';
+$config['contact']['mail'] = 'support@example.com';
+
+// Frontpage configuration
+
+// Title of the page
+$config['frontpage']['title'] = 'Looking Glass';
+// Logo to display (remove it to not display any logo)
+$config['frontpage']['image'] = 'logo.png';
+// Disclaimer to inform people using the looking glass
+// Set it to null to not display a disclaimer
+$config['frontpage']['disclaimer'] = 'This is a disclaimer!';
+
+// Things to remove from the output (PHP compatible regex)
+$config['filters']['output'][] = '/(client1|client2)/';
+$config['filters']['output'][] = '/^NotToShow/';
+// Matched patterns can also replaced inline
+$config['filters']['output'][] = ['/replacethis/', 'withthis'];
+
+// If telnet is used in combination with extreme_netiron, uncomment the following filter
+//$config['filters']['output'][] = '/([^\x20-\x7E]|User|Please|Disable|telnet|^\s*$)/';
+
+// Captcha integration
+$config['captcha']['enabled'] = false;
+// Set 'recaptcha' for Google reCaptcha integration, or 'hcaptcha' for https://www.hcaptcha.com integration
+$config['captcha']['type'] = 'recaptcha'; 
+$config['captcha']['apikey'] = 'foobar';
+$config['captcha']['secret'] = 'foobar';
+$config['captcha']['url'] = 'https://www.google.com/recaptcha/api/siteverify';
+// For 'hcaptcha' integration
+//$config['captcha']['url'] = 'https://hcaptcha.com/siteverify';
+
+// Routers definitions
+
+// Authentication based on SSH or Telnet with password
+// The hostname or the IP address
+$config['routers']['router1']['host'] = '38.104.144.226';
+// The user to use to connect to the router
+$config['routers']['router1']['user'] = 'lg';
+// The password of the given user
+$config['routers']['router1']['private_key'] = '/var/www/devops.key';
+// The authentication mechanism to use (can be ssh-password or telnet)
+$config['routers']['router1']['auth'] = 'ssh-key';
+// The router type (can be cisco, ios, juniper or junos)
+$config['routers']['router1']['type'] = 'frr';
+// The router source interface to be used
+$config['routers']['router1']['source-interface-id'] = 'lo0';
+// The router description to be displayed in the router list
+$config['routers']['router1']['desc'] = 'Example\'s Router 1';
+
+
+// If running on *BSD, disable '-A' which is non-existent
+$config['tools']['ping_options'] = '-c 5';
+// If running on *BSD, disable '-N' which is non-existent
+$config['tools']['traceroute_options'] = '-A -q1 -w2 -m15';
+// If running on *BSD, there is no '-4' or '-6'
+$config['tools']['traceroute6'] = 'traceroute6';
+$config['tools']['traceroute4'] = 'traceroute';
+
+// Enables VRF subsystem
+$config['vrfs']['enabled'] = true;
+// The default IPv4 vrf
+$config['vrfs']['vrfs'][] = 'inet.0';
+// The default IPv6 vrf
+$config['vrfs']['vrfs'][] = 'inet6.0';
+
+// End of config.php

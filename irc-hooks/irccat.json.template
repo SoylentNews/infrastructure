@@ -8,7 +8,9 @@
     "tls_key": "",
     "tls_cert": "",
     "listeners": {
-      "generic": true,
+      "generic": {
+	"secret": "{{IRCCAT_DEVBOT_IDENT_PASS}}"
+	},
       "grafana": "#channel",
       "github": {
 	"secret": "{{IRCCAT_GITHUB_SECRET}}",
@@ -28,7 +30,7 @@
     "nick": "devbot",
     "realname": "dev bot",
     "identify_pass": "{{IRCCAT_DEVBOT_IDENT_PASS}}",
-    "channels": ["#dev", "#soylent"],
+    "channels": ["#dev", "#soylent", "#staff"],
     "keys": {"#channel": "join_key"}
   },
   "commands": {

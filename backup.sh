@@ -27,6 +27,8 @@ declare -A DIRECTORIES_TO_COPY=(
     ["/opt/mediawiki/backup/"]="mediawiki-db/"
     ["/opt/tor/"]="tor/"
     ["/opt/znc/data/"]="znc/"
+    ["/opt/hc/"]="hc/"
+    ["/opt/lg/"]="lg/"
 )
 
 
@@ -73,3 +75,5 @@ for DIR in "${!DIRECTORIES_TO_COPY[@]}"; do
         echo "Directory $DIR does not exist."
     fi
 done
+
+curl --insecure -m 10 --retry 5 https://hc.soylentnews.org/ping/daacd67f-ae6c-4613-9d62-92e1b0601b10

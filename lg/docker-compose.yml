@@ -1,0 +1,26 @@
+services:
+  lg:
+    image: gmazoyer/looking-glass
+    environment:
+     - SECRET_KEY
+     - PUBLIC_KEY
+     - HOSTNAME
+    volumes:
+      - /opt/lg/config.php:/var/www/html/config.php
+      - /opt/lg/devops.key:/var/www/devops.key
+    networks:
+     - traefik
+    labels:
+     traefik.enable: true
+     traefik.docker.network: traefik_network
+     traefik.http.routers.lg.tls: true
+     traefik.http.routers.lg.rule: Host(`lg.${BASE_URL}`)
+     traefik.http.routers.lg.entrypoints: websecure
+     traefik.http.routers.lg.service: lg-service
+     traefik.http.routers.lg.tls.certresolver: myresolver
+     traefik.http.services.lg-service.loadbalancer.server.port: 80
+
+networks:
+ traefik:
+  name: traefik_network
+  external: true
