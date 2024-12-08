@@ -1,0 +1,23 @@
+services:
+  rdap-api:
+    image: "rdap:${ENVIRONMENT}"
+    container_name: rdap-api
+    networks:
+     - traefik
+    labels:
+     traefik.enable: true
+     traefik.docker.network: traefik_network
+     traefik.http.routers.rdap.tls: true
+     traefik.http.routers.rdap.rule: Host(`rdap.${BASE_URL}`)
+     traefik.http.routers.rdap.entrypoints: websecure
+     traefik.http.routers.rdap.service: rdap-service
+     traefik.http.routers.rdap.tls.certresolver: myresolver
+     traefik.http.services.rdap-service.loadbalancer.server.port: 3030
+    volumes:
+      - /opt/rdap/cache:/data
+    environment:
+     - BASE_URL
+networks:
+ traefik:
+  name: traefik_network
+  external: true

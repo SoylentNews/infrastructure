@@ -1,0 +1,11 @@
+{
+	"extra": {
+		"merge-plugin": {
+			"include": [
+				"extensions/WikiMarkdown/composer.json",
+				"extensions/SyntaxHighlight_GeSHi/composer.json"
+			]
+		}
+	}
+}
+

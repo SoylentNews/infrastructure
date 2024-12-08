@@ -13,3 +13,8 @@
 .local/
 .selected_editor
 .gitconfig
+.wget-hsts
+dead.letter
+/.dotnet
+/.vscode-server
+/.gk

@@ -102,7 +102,7 @@ services:
    - "traefik.enable=true"
    - "traefik.docker.network=traefik_network"
    - "traefik.http.routers.rehash.tls=true"
-   - "traefik.http.routers.rehash.rule=Host(`www.${BASE_URL}`) || Host(`${BASE_URL}`)"
+   - "traefik.http.routers.rehash.rule=Host(`www.${BASE_URL}`) || Host(`${BASE_URL}`) || Host(`paypal.${BASE_URL}`)"
    - "traefik.http.routers.rehash.entrypoints=websecure"
    - "traefik.http.routers.rehash.service=www-rehash-service"
    - "traefik.http.routers.rehash.tls.certresolver=myresolver"

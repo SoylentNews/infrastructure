@@ -188,10 +188,10 @@ class IRCBot(irc.bot.SingleServerIRCBot):
 
         self.delayed_privmsg(connection, self.channel, f"{nick}: Next reset in {reset_str}, next announcement in {announcement_str}.", delay)
     def handle_scheduled_reset(self):
-        self.reset_all()
         self.next_reset = time.time() + (2 * 60 * 60)
-        self.save_schedule()
         Timer(2 * 60 * 60, self.handle_scheduled_reset).start()
+        self.reset_all()
+        self.save_schedule()
     def handle_reset_now(self, connection, delay):
         self.reset_all()
         self.delayed_privmsg(connection, self.channel, "Reset triggered by Soylent/Staff member.", delay)

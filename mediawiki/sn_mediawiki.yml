@@ -13,6 +13,15 @@ RUN set -eux; \
 	; \
 	rm -rf /var/lib/apt/lists/*
 
+
+RUN set -eux; \
+    current_uid=$(id -u www-data); \
+    current_gid=$(id -g www-data); \
+    usermod -u 50000 www-data; \
+    groupmod -g 50000 www-data; \
+    find / -path /proc -prune -o -user "$current_uid" -exec chown -h 50000 {} \; ; \
+    find / -path /proc -prune -o -group "$current_gid" -exec chgrp -h 50000 {} \;
+
 # Install the PHP extensions we need
 RUN set -eux; \
 	\
@@ -170,7 +179,7 @@ RUN mkdir -p /build && \
  cd /build && \
  git clone https://github.com/wikimedia/mediawiki-extensions-SyntaxHighlight_GeSHi.git SyntaxHighlight_GeSHi && \
  cd SyntaxHighlight_GeSHi && \
- git checkout REL1_41
+ git checkout REL1_41 
 
 RUN mkdir -p /build && \
  cd /build && \
@@ -244,6 +253,17 @@ RUN mkdir -p /build && \
  cd WikiEditor && \
  git checkout REL1_41
 
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/wikimedia/mediawiki-extensions-BulkBlock.git BulkBlock && \
+ cd BulkBlock && \
+ git checkout REL1_41
+
+RUN mkdir -p /build && \
+ cd /build && \
+ git clone https://github.com/kuenzign/WikiMarkdown.git WikiMarkdown && \
+ cd WikiMarkdown && \
+ sed -i 's/SyntaxHighlight::/MediaWiki\\SyntaxHighlight\\SyntaxHighlight::/g' ./includes/WikiMarkdown.php
 
 # SKINS
 
@@ -276,6 +296,7 @@ RUN mkdir -p /skins && \
 
 RUN cp -r /build/* /var/www/html/extensions/
 RUN cp -r /skins/* /var/www/html/skins/
+RUN chown www-data:www-data -R /var/www/html 
 
 RUN set -eux; \
         \
@@ -286,5 +307,6 @@ RUN set -eux; \
         rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
+COPY ./composer.local.json /var/www/html/
 RUN cd /var/www/html/ && composer update --no-dev && cd /var/www/html/extensions/AbuseFilter/ && composer update
 

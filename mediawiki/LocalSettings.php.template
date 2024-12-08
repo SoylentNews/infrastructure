@@ -156,7 +156,6 @@ wfLoadExtension ('DismissableSiteNotice');
 wfLoadExtension ('Interwiki');
 wfLoadExtension ('Renameuser');
 wfLoadExtension ('SpamBlacklist');
-wfLoadExtension ('SyntaxHighlight_GeSHi');
 wfLoadExtension ('TitleBlacklist');
 wfLoadExtension ('TorBlock');
 wfLoadExtension ('TrustedXFF');
@@ -269,6 +268,9 @@ $wgDefaultSkin = "vector";
 
 
 wfLoadExtension ('ConfirmAccount');
+wfLoadExtension( 'BulkBlock' );
+wfLoadExtension( 'WikiMarkdown' );
+
 # also needs an email to notify of requests
 $wgConfirmAccountContact = 'admin@soylentnews.org';
 # disable the normally required 50 word biography
@@ -279,7 +281,7 @@ $wgConfirmAccountRequestFormItems['Biography']['enabled'] = false;
 
 $wgShowExceptionDetails = true;
 $wgUsePrivateIPs = true;
-$wgCdnServersNoPurge = array( '172.17.1.5');
+$wgCdnServersNoPurge = array( '172.16.0.0/12');
 
 
 $wgSecretKey = "{{WG_SECRET_KEY}}";
@@ -290,3 +292,8 @@ $wgUpgradeKey = "{{WG_UPGRADE_KEY}}";
 $wgReCaptchaSiteKey  = '{{WG_RECAPTCHA_SITE_KEY}}';
 $wgReCaptchaSecretKey = '{{WG_RECAPTCHA_SECRET_KEY}}';
 $wgTorIPs = array('{{WG_TOR_IPS}}'); // The wiki's IP address(es)
+
+define('NS_HISTORIC', 4000);
+define('NS_HISTORIC_TALK', 4001);
+$wgExtraNamespaces[NS_HISTORIC] = 'Historic';
+$wgExtraNamespaces[NS_HISTORIC_TALK] = 'Historic_talk';
