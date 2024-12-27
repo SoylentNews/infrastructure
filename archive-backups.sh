@@ -1,7 +1,12 @@
 #!/bin/bash
 
 # Directory containing the backups
-BACKUP_DIR="/opt/rehash/backup"
+BACKUP_DIR="/home/remote/backup/"
+
+if [[ "$#" -gt 0 && "$1" != "--dry-run" ]]; then
+    BACKUP_DIR=$1
+    shift
+fi
 
 # Flag to control dry run mode
 DRY_RUN=false
