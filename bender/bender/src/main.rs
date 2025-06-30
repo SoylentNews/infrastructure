@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         channels: config.channels.clone(),
         port: Some(config.port),
         username: Some("bot".to_string()),
-        password: config.nickserv_password.clone(), // This line is added
+        nick_password: config.nickserv_password.clone(), // This line is added
         ..Default::default()
     };
 
