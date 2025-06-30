@@ -101,7 +101,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 println!("No RSS channels configured, RSS polling will not start.");
                                 rss_polling_started = true; // Prevents this from running again
                             }
-                        }
                     }
                 }
             }
