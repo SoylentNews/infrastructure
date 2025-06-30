@@ -76,9 +76,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             Command::JOIN(ref channel, _, _) => {
-                if let Some(ref prefix) = message.prefix {
-                    if let Some(nick) = prefix.nick() {
-                        if nick == config.nickname {
+                if let Some(nick) = message.source_nickname() {
+                    if nick == config.nickname {
                             println!("Bot joined channel: {}", channel);
 
                             // Update the master list of joined channels
@@ -117,7 +116,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             Command::KICK(ref channel, ref kicked_user, _) => {
-                if kicked_user == config.nickname {
+                if *kicked_user == config.nickname {
                     println!("Bot was kicked from channel: {}. Will try to rejoin.", channel);
                     joined_channels.lock().unwrap().remove(channel);
                     joined_rss_channels.remove(channel);
