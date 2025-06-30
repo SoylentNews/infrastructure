@@ -10,6 +10,7 @@ pub struct Config {
     pub channels: Vec<String>,
     pub db_path: String,
     pub rss_feeds_path: Option<String>,
+    pub nickserv_password: Option<String>,
 }
 
 impl Config {

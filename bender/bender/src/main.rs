@@ -15,9 +15,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let irc_config = ::irc::client::prelude::Config {
         nickname: Some(config.nickname.clone()),
         server: Some(config.server.clone()),
-        channels: config.channels.clone(), // Initial join attempts
+        channels: config.channels.clone(),
         port: Some(config.port),
         username: Some("bot".to_string()),
+        password: config.nickserv_password.clone(), // This line is added
         ..Default::default()
     };
 
