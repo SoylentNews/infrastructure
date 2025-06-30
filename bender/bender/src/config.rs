@@ -9,6 +9,7 @@ pub struct Config {
     pub realname: String,
     pub channels: Vec<String>,
     pub db_path: String,
+    pub rss_feeds_path: Option<String>,
 }
 
 impl Config {

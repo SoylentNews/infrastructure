@@ -2,5 +2,6 @@ server = "irc.soylentnews.org"
 port = 6697
 nickname = "bender"
 realname = "bot"
-channels = ["#soylent"]
+channels = ["#soylent", "#rss-bot"]
 db_path = "/data/"
+rss_feeds_path = "/bin/feeds.toml"
