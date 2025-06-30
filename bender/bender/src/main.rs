@@ -103,7 +103,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                         }
                     }
-                    }
                 }
             }
             // --- New handlers for PART and KICK ---
