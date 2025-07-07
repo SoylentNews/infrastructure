@@ -3,7 +3,7 @@ mod config;
 
 use futures::StreamExt;
 use irc::client::prelude::*;
-use modules::{karma::KarmaHandler, rss::RssHandler};
+use modules::{karma::KarmaHandler, rss::RssHandler, logger::Logger};
 use std::collections::HashSet;
 use std::sync::{Arc, Mutex};
 use tokio::time::{interval, Duration};
@@ -18,7 +18,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         channels: config.channels.clone(),
         port: Some(config.port),
         username: Some("bot".to_string()),
-        nick_password: config.nickserv_password.clone(), // This line is added
+        nick_password: config.nickserv_password.clone(), 
         ..Default::default()
     };
 
@@ -55,8 +55,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // --- End of retry logic ---
 
     let mut karma = KarmaHandler::new(&config);
-
     let rss_handler = Arc::new(RssHandler::new(&config));
+    let logger = Logger::new(&config).map(Arc::new);
     
     let rss_channels: HashSet<String> = rss_handler.get_rss_channels();
     let mut joined_rss_channels: HashSet<String> = HashSet::new();
@@ -64,6 +64,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     loop {
         let message = stream.select_next_some().await?;
+
+        if let Some(log_handler) = logger.as_ref() {
+            let msg_clone = message.clone();
+            let handler_clone = Arc::clone(log_handler);
+            tokio::spawn(async move {
+                handler_clone.log_message(&msg_clone).await;
+            });
+        }
 
         match message.command {
             Command::PRIVMSG(ref _target, ref msg) => {
