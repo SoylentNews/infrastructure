@@ -72,7 +72,7 @@ PORT = int(os.environ.get('LOGGIE_IRCPORT', 6667))
 SERVER_PASS = os.environ.get('LOGGIE_IRCPASS', None)
 CHANNELS = json.loads(os.environ.get('LOGGIE_CHANNELS', '[]'))
 NICK = os.environ.get('LOGGIE_IRCNICK', 'LoggieStaging')
-NICK_PASS = ""
+NICK_PASS = os.environ.get('LOGGIE_NICKPASS','soylent')
 
 # The local folder to save logs
 LOG_FOLDER = "/logs"
@@ -273,7 +273,15 @@ class Logbot(SingleServerIRCBot):
         self.set_ftp()
         self.count = 0
         self.nick_pass = nick_pass
-
+        
+        # Channel retry mechanism
+        self.pending_channels = list(self.chans)  # Channels to join
+        self.failed_channels = {}  # Failed channels with retry count
+        self.max_retries = 3
+        self.retry_delays = [30, 60, 120]  # Retry after 30s, 60s, 120s
+        self.nickserv_delay = 3  # Wait 3 seconds after NickServ auth
+        self.nickserv_authenticated = False
+        
         self.load_channel_locations()
         print "Logbot %s" % __version__
         print "Connecting to %s:%i..." % (server, port)
@@ -405,11 +413,94 @@ class Logbot(SingleServerIRCBot):
 
     def on_welcome(self, c, e):
         """Join channels after successful connection"""
+        print "Connected to server, authenticating..."
+        
         if self.nick_pass:
-          c.privmsg("nickserv", "identify %s" % self.nick_pass)
+            print "Authenticating with NickServ..."
+            c.privmsg("nickserv", "identify %s" % self.nick_pass)
+            # Schedule delayed channel joining after NickServ auth
+            self.connection.execute_delayed(self.nickserv_delay, self._join_pending_channels)
+        else:
+            # No NickServ auth needed, join immediately
+            self._join_pending_channels()
+    
+    def _join_pending_channels(self):
+        """Join all pending channels"""
+        print "Joining %d channels..." % len(self.pending_channels)
+        for chan in list(self.pending_channels):
+            print "Joining channel: %s" % chan
+            self.connection.join(chan)
 
-        for chan in self.chans:
-            c.join(chan)
+    def _schedule_channel_retry(self, channel):
+        """Schedule a retry for a failed channel join"""
+        if channel not in self.failed_channels:
+            self.failed_channels[channel] = 0
+        
+        retry_count = self.failed_channels[channel]
+        
+        if retry_count < self.max_retries:
+            delay = self.retry_delays[min(retry_count, len(self.retry_delays) - 1)]
+            self.failed_channels[channel] += 1
+            
+            print "Scheduling retry %d/%d for %s in %d seconds" % (
+                retry_count + 1, self.max_retries, channel, delay)
+            
+            self.connection.execute_delayed(delay, lambda: self._retry_channel_join(channel))
+        else:
+            print "Max retries reached for channel: %s" % channel
+            del self.failed_channels[channel]
+    
+    def _retry_channel_join(self, channel):
+        """Retry joining a specific channel"""
+        print "Retrying join for channel: %s" % channel
+        self.connection.join(channel)
+
+    def get_join_status(self):
+        """Get current status of channel joins"""
+        total_channels = len(self.chans)
+        joined_channels = len([c for c in self.chans if c in self.channels])
+        pending_channels = len(self.pending_channels)
+        failed_channels = len(self.failed_channels)
+        
+        print "Channel Status: %d total, %d joined, %d pending, %d retrying" % (
+            total_channels, joined_channels, pending_channels, failed_channels)
+        
+        if self.failed_channels:
+            for channel, retry_count in self.failed_channels.items():
+                print "  Retrying: %s (attempt %d/%d)" % (channel, retry_count, self.max_retries)
+
+    # Error handlers for channel join failures
+    def on_channelisfull(self, c, e):
+        """Handle channel is full error (471)"""
+        channel = e.arguments()[1].lower() if len(e.arguments()) > 1 else None
+        if channel:
+            print "Channel is full: %s" % channel
+            self._schedule_channel_retry(channel)
+
+    def on_inviteonlychan(self, c, e):
+        """Handle invite only channel error (473)"""
+        channel = e.arguments()[1].lower() if len(e.arguments()) > 1 else None
+        if channel:
+            print "Channel is invite only: %s" % channel
+            self._schedule_channel_retry(channel)
+
+    def on_bannedfromchan(self, c, e):
+        """Handle banned from channel error (474)"""
+        channel = e.arguments()[1].lower() if len(e.arguments()) > 1 else None
+        if channel:
+            print "Banned from channel: %s" % channel
+            # Don't retry banned channels
+            if channel in self.pending_channels:
+                self.pending_channels.remove(channel)
+            if channel in self.failed_channels:
+                del self.failed_channels[channel]
+
+    def on_badchannelkey(self, c, e):
+        """Handle bad channel key error (475)"""
+        channel = e.arguments()[1].lower() if len(e.arguments()) > 1 else None
+        if channel:
+            print "Bad channel key: %s" % channel
+            self._schedule_channel_retry(channel)
 
     def on_nicknameinuse(self, c, e):
         """Nickname in use"""
@@ -427,6 +518,20 @@ class Logbot(SingleServerIRCBot):
         self.write_event("action", e)
 
     def on_join(self, c, e):
+        """Handle successful channel joins"""
+        channel = e.target().lower()
+        nick = nm_to_n(e.source())
+        
+        # If it's our own join, remove from pending and failed lists
+        if nick == c.get_nickname():
+            if channel in self.pending_channels:
+                self.pending_channels.remove(channel)
+                print "Successfully joined: %s" % channel
+            
+            if channel in self.failed_channels:
+                print "Retry successful for: %s" % channel
+                del self.failed_channels[channel]
+        
         self.write_event("join", e)
 
     def on_kick(self, c, e):
